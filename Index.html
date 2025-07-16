@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Cápsula do Tempo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fdfdfd;
+      padding: 20px;
+      text-align: center;
+      color: #333;
+    }
+
+    h1 {
+      color: #8b3f8e;
+      margin-bottom: 30px;
+    }
+
+    form {
+      max-width: 400px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    input[type="file"],
+    input[type="text"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+
+    button {
+      background: #8b3f8e;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #a458a8;
+    }
+
+    #preview {
+      max-width: 100%;
+      margin-top: 15px;
+      display: none;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 480px) {
+      form {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Cápsula do Tempo</h1>
+
+  <form id="photoForm">
+    <label for="photo">Escolha uma foto:</label>
+    <input type="file" id="photo" accept="image/*" required>
+
+    <label for="name">Seu nome:</label>
+    <input type="text" id="name" placeholder="Ex: João Elias" required>
+
+    <label for="message">Sua mensagem:</label>
+    <textarea id="message" rows="4" placeholder="Deixe uma mensagem carinhosa..." required></textarea>
+
+    <img id="preview" alt="Prévia da foto">
+
+    <button type="submit">Enviar</button>
+  </form>
+
+  <script>
+    const preview = document.getElementById('preview');
+    const upload = document.getElementById('photo');
+
+    upload.addEventListener('change', () => {
+      const file = upload.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    document.getElementById('photoForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const file = upload.files[0];
+      const name = document.getElementById('name').value.trim();
+      const message = document.getElementById('message').value.trim();
+
+      if (!file || !name || !message) {
+        alert("Preencha todos os campos e selecione uma imagem.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        fetch('https://script.google.com/macros/s/AKfycbwTA6DeTeVZBpBvWz4f6zykEhbGo9xpWRVQBcHDCoeNcKdbV9LvTeloDETWPcxtL22v/exec', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            photo: event.target.result,
+            name,
+            message
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.status === 'success') {
+            alert('✅ Foto enviada com sucesso!');
+            upload.value = '';
+            document.getElementById('name').value = '';
+            document.getElementById('message').value = '';
+            preview.style.display = 'none';
+          } else {
+            alert('❌ Erro: ' + data.message);
+          }
+        })
+        .catch(err => {
+          alert('Erro no envio: ' + err.message);
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  </script>
+</body>
+</html>
